@@ -1,8 +1,8 @@
+opencv-python-headless
 streamlit
-opencv-python
-pillow
-mediapipe
 numpy
+mediapipe
+pillow
 gtts
 speechrecognition
 pyttsx3
