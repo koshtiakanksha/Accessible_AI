@@ -2,7 +2,6 @@
 
 ![Accessible AI](dev/Home.png)  
 
-**Breaking Barriers, Enhancing Communication, and Empowering Inclusion with AI.**
 
 ## 📌 About the Project
 
