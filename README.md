@@ -1,6 +1,6 @@
 # Accessible AI: Bridging Communication Gaps
 
-![Accessible AI](https://your-image-link-here.com)  
+![Accessible AI](dev/Home.png)  
 
 **Breaking Barriers, Enhancing Communication, and Empowering Inclusion with AI.**
 
