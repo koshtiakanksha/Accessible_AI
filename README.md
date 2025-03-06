@@ -16,7 +16,8 @@
 
 ## 🚀 Live Demo
 
-You can access the app here: [Accessible AI on Hugging Face](https://huggingface.co/spaces/your-space-name)
+You can access the app here: [Accessible AI on Streamlit](https://accessibleai-rsmecrot2tjcargzxvf2td.streamlit.app/)
+The features may not work due to the constraints of hosting it on Streamlit, but you can clone the repository to use all the features.
 
 ## 🛠️ Tech Stack
 
@@ -26,7 +27,7 @@ You can access the app here: [Accessible AI on Hugging Face](https://huggingface
   - Speech-to-Text: `SpeechRecognition`, `Whisper ASR`
   - Text-to-Speech: `gTTS`
   - Sign Language Recognition: `MediaPipe`, `OpenCV`
-- **Deployment**: Hugging Face Spaces
+- **Deployment**: Streamlit
 
 ## 📥 Installation
 
