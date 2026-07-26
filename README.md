@@ -1,111 +1,90 @@
-# Accessible AI: Bridging Communication Gaps
+# Accessible AI — Communication Modality Prototypes
 
-![Accessible AI](dev/Home.png)  
+![Accessible AI](dev/Home.png)
 
+## About the project
 
-## 📌 About the Project
+Accessible AI is a small collection of Streamlit prototypes exploring different
+communication modalities for accessibility: speech-to-text, text-to-speech, a sign
+vocabulary lookup, and gesture-based shortcuts. It started as a proof of concept and
+is being actively rebuilt into a more cohesive, honestly-scoped project. This README
+describes what the app **actually does today** — see [Roadmap](#roadmap) for where
+it's headed.
 
-**Accessible AI** is an inclusive communication tool that helps bridge gaps between speech, text, and sign language. It is designed for individuals with disabilities, enabling seamless interaction using AI-powered solutions.
+## What's in here today
 
-## ✨ Features
+| Page | What it does | Known limitation |
+|---|---|---|
+| **Speech to Text** | Transcribes speech using Google's speech-recognition API via `SpeechRecognition` | Opens the microphone of the machine *running the Streamlit process*, not the browser user's mic — works locally, not reliably on a hosted deployment |
+| **Text to Speech** | Converts typed text to audio with `gTTS` | Requires an internet connection (gTTS calls Google's TTS service) |
+| **Sign Vocabulary Explorer** | Looks up a small, fixed set of stored sign images for known words/phrases | This is a vocabulary lookup, not sign-language translation — ASL has its own grammar that word-by-word image lookup doesn't capture |
+| **Gesture Shortcuts** | Recognizes 7 generic hand gestures (thumbs up, peace sign, etc.) via MediaPipe's built-in gesture recognizer and maps each to a shortcut phrase | This is generic gesture recognition with manually assigned labels, not sign-language recognition; camera access has the same local-machine limitation as the mic above |
 
-- **Speech-to-Text**: Converts spoken language into text using AI-powered transcription.
-- **Text-to-Speech**: Converts written text into speech for accessibility.
-- **Text-to-Sign Language**: Displays sign language representations for given text.
-- **Sign Language Recognition**: Uses a webcam to recognize and interpret hand gestures into text.
+## Why the naming changed
 
-## 🚀 Live Demo
+Earlier versions of this README described "Text-to-Sign Language" translation and
+"Sign Language Recognition." Neither claim was accurate for what the code does — both
+features work on a small fixed vocabulary/gesture set rather than actual sign-language
+grammar. The pages and README now describe what's really happening.
 
-You can access the app here: [Accessible AI on Streamlit](https://accessibleai-rsmecrot2tjcargzxvf2td.streamlit.app/)
-The features may not work due to the constraints of hosting it on Streamlit, but you can clone the repository to use all the features.
+## Tech stack
 
-## 🛠️ Tech Stack
+- **UI**: Streamlit (multipage app)
+- **Speech-to-text**: `SpeechRecognition` (Google Web Speech API)
+- **Text-to-speech**: `gTTS`
+- **Gesture recognition**: MediaPipe Gesture Recognizer, OpenCV
 
-- **Frontend**: Streamlit
-- **Backend**: FastAPI (Replaced with direct API calls for Hugging Face compatibility)
-- **AI Models**:
-  - Speech-to-Text: `SpeechRecognition`, `Whisper ASR`
-  - Text-to-Speech: `gTTS`
-  - Sign Language Recognition: `MediaPipe`, `OpenCV`
-- **Deployment**: Streamlit
-
-## 📥 Installation
+## Installation
 
 ### Prerequisites
-Ensure you have **Python 3.8+** installed.
+
+Python 3.10+ is recommended.
 
 ### Steps
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/koshtiakanksha/Accessible_AI.git
-   cd Accessible_AI
-   ```
-2. **Create and activate a virtual environment:**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows use: venv\Scripts\activate
-   ```
-3. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-4. **Run the Streamlit app:**
-   ```bash
-   streamlit run Home.py
-   ```
+```bash
+git clone https://github.com/koshtiakanksha/Accessible_AI.git
+cd Accessible_AI
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+streamlit run Home.py
+```
 
-## 📌 Usage
+Because the speech and gesture pages access the microphone/camera of the machine
+running the process, run this locally to try those two features — a cloud-hosted
+deployment (e.g. Streamlit Community Cloud) will not have access to your device's
+mic/camera through this architecture.
 
-1. **Speech-to-Text**
-   - Click **Start Recording** and speak.
-   - The app will transcribe your speech into text.
+## Known limitations (read before assuming a feature works)
 
-2. **Text-to-Speech**
-   - Enter text and click **Convert to Speech**.
-   - The app will generate and play the speech.
+- Speech-to-text and gesture recognition both access the *server's* microphone/camera,
+  not the browser user's — this only works meaningfully when run locally.
+- The sign vocabulary and gesture-shortcut sets are both small and fixed; neither is a
+  general-purpose sign-language system.
+- There is no automated test suite or accuracy evaluation yet (in progress — see
+  Roadmap).
+- gTTS requires an internet connection; there's no offline fallback.
 
-3. **Text-to-Sign Language**
-   - Type text and the corresponding sign language images will be displayed.
+## Roadmap
 
-4. **Sign Language Recognition**
-   - Click **Start Recognition** and show a hand gesture.
-   - The app will identify and display the recognized gesture.
+This project is being rebuilt in phases toward a more complete, honestly-scoped
+"one product" experience rather than four separate demos:
 
-## 🚀 Deployment
+1. **Integrity pass** *(current)* — fix known bugs, rename misleading features, document
+   real limitations.
+2. Move speech/camera capture to the browser (e.g. `streamlit-webrtc`) so the hosted
+   demo actually works for visitors, not just local runs.
+3. Merge the modalities into a single conversation view (live captions + type-to-speak
+   reply + gesture shortcuts together).
+4. Formal evaluation of the gesture recognizer (precision/recall/F1 per class, false-
+   activation rate) and a spot-check of transcription accuracy.
+5. Basic automated tests + CI.
 
-### Hugging Face Spaces
+## Contributing
 
-To deploy on Hugging Face:
+Contributions are welcome — fork, branch, commit, open a PR.
 
-1. Create a **Hugging Face Space** (use Streamlit template).
-2. Push your files to the repository:
-   ```bash
-   git add .
-   git commit -m "Deploy Accessible AI"
-   git push
-   ```
-3. Your app will be deployed automatically.
+## License
 
-## 🐛 Troubleshooting
-
-- **Camera not opening?** Use `streamlit-webrtc` instead of OpenCV.
-- **PyAudio error?** Replace with `speech_recognition` or `whisper ASR`.
-- **Connection refused for text-to-speech?** Remove FastAPI calls and use `gTTS`.
-
-## 🤝 Contributing
-
-Contributions are welcome! Follow these steps:
-1. Fork the repository.
-2. Create a new branch.
-3. Commit changes and push to GitHub.
-4. Open a Pull Request.
-
-## 📜 License
-
-This project is licensed under the **MIT License**.
-
----
-
-🌟 **Let's make AI more accessible for everyone!** 🌟
-
+MIT License.

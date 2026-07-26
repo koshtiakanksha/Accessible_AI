@@ -7,6 +7,12 @@ recognizer = sr.Recognizer()
 # Streamlit UI
 st.title("Speech-to-Text Converter")
 st.write("Click the button below and start speaking. The app will convert your speech into text.")
+st.caption(
+    "⚠️ This uses the microphone of the machine running the Streamlit server, not your "
+    "browser's microphone. It works when you run the app locally, but will not pick up your "
+    "voice on a hosted deployment (e.g. Streamlit Community Cloud). Browser-based capture is "
+    "planned — see the README limitations section."
+)
 
 # Function to recognize speech from microphone
 def recognize_speech():
@@ -14,7 +20,7 @@ def recognize_speech():
         st.write("Listening...")
         recognizer.adjust_for_ambient_noise(source)  # Reduce background noise
         try:
-            audio = recognizer.listen(source, timeout=30)  # Listen for 5 seconds
+            audio = recognizer.listen(source, timeout=30)  # Listen for up to 30 seconds
             text = recognizer.recognize_google(audio)  # Convert speech to text
             return text
         except sr.UnknownValueError:
