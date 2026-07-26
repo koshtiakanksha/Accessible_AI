@@ -5,3 +5,5 @@ mediapipe==0.10.21
 pillow==11.1.0
 gTTS==2.5.4
 SpeechRecognition==3.14.3
+streamlit-webrtc==0.63.4
+av==17.1.0
