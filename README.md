@@ -1,20 +1,26 @@
 # Accessible AI — Communication Modality Prototypes
 
-![Accessible AI](dev/Home.png)
+A small collection of tools exploring different communication modalities for
+accessibility — voice, captions, and gesture shortcuts, meeting in one conversation view.
 
 ## About the project
 
-Accessible AI is a small collection of Streamlit prototypes exploring different
-communication modalities for accessibility: speech-to-text, text-to-speech, a sign
-vocabulary lookup, and gesture-based shortcuts. It started as a proof of concept and
-is being actively rebuilt into a more cohesive, honestly-scoped project. This README
-describes what the app **actually does today** — see [Roadmap](#roadmap) for where
-it's headed.
+Accessible AI explores different communication modalities for accessibility — speech,
+written captions, and gesture shortcuts — and merges them into one conversation view.
+It started as four disconnected proof-of-concept demos and is being actively rebuilt
+into a more cohesive, honestly-scoped project. This README describes what the app
+**actually does today** — see [Roadmap](#roadmap) for where it's headed.
+
+Each modality has a consistent accent color used everywhere it appears (cards, chat
+bubbles, tags): **voice** (gold), **caption** (teal), **signal** (violet). Body text
+uses Atkinson Hyperlegible, a typeface designed by the Braille Institute for maximum
+legibility for low-vision readers.
 
 ## What's in here today
 
 | Page | What it does | Known limitation |
 |---|---|---|
+| **Conversation** *(new)* | Merges the three interactive modalities below into one screen: speak → transcribed message, show a gesture → shortcut phrase (spoken aloud automatically), type a reply → spoken aloud. Includes quick-reply phrases and a downloadable transcript | Gesture detection here polls once per second rather than live video overlay, to keep the reply controls clickable at the same time |
 | **Speech to Text** | Records your browser's microphone over WebRTC, then transcribes it on demand using `SpeechRecognition` | Requires an internet connection (Google's free Web Speech API); not real-time streaming — you record, then click Transcribe |
 | **Text to Speech** | Converts typed text to audio with `gTTS` | Requires an internet connection (gTTS calls Google's TTS service) |
 | **Sign Vocabulary Explorer** | Looks up a small, fixed set of stored sign images for known words/phrases | This is a vocabulary lookup, not sign-language translation — ASL has its own grammar that word-by-word image lookup doesn't capture |
@@ -72,6 +78,21 @@ mic/camera permission prompt.
   firewalls/NATs without a TURN server configured — if the camera/mic preview never
   appears, that's the likely cause.
 
+## Repo layout
+
+```
+Home.py                       Landing page
+pages/1_Conversation.py       Merged voice + caption + gesture view
+pages/2-5_*.py                Standalone single-modality pages
+assets/theme.py               Shared design tokens + CSS + hero/card components
+lib/speech_capture.py         WebRTC mic buffering + transcription
+lib/gesture_capture.py        WebRTC camera + MediaPipe gesture recognition
+lib/tts.py                    gTTS synthesis helper
+```
+
+The standalone pages and Conversation mode both import from `lib/`, so there's one
+implementation of each capability, not four copies drifting apart.
+
 ## Roadmap
 
 This project is being rebuilt in phases toward a more complete, honestly-scoped
@@ -81,10 +102,10 @@ This project is being rebuilt in phases toward a more complete, honestly-scoped
    limitations.
 2. ✅ **Browser-based mic/camera capture** via `streamlit-webrtc` — the hosted demo now
    works for visitors, not just local runs.
-3. **Current**: merge the modalities into a single conversation view (live captions +
-   type-to-speak reply + gesture shortcuts together).
-4. Formal evaluation of the gesture recognizer (precision/recall/F1 per class, false-
-   activation rate) and a spot-check of transcription accuracy.
+3. ✅ **Conversation mode** — voice, captions, and gesture shortcuts merged into one
+   screen.
+4. **Next**: formal evaluation of the gesture recognizer (precision/recall/F1 per
+   class, false-activation rate) and a spot-check of transcription accuracy.
 5. Basic automated tests + CI.
 
 ## Contributing

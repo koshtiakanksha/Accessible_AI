@@ -5,16 +5,10 @@ import time
 import av
 import cv2
 import mediapipe as mp
-import streamlit as st
-from streamlit_webrtc import VideoProcessorBase, WebRtcMode, webrtc_streamer
+from streamlit_webrtc import VideoProcessorBase
 
-# Get the current directory of the script
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-MODEL_PATH = os.path.join(BASE_DIR, "..", "gesture_recognizer.task")
-
-if not os.path.exists(MODEL_PATH):
-    st.error(f"Model file not found: {MODEL_PATH}")
-    st.stop()
+_BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MODEL_PATH = os.path.join(_BASE_DIR, "gesture_recognizer.task")
 
 BaseOptions = mp.tasks.BaseOptions
 GestureRecognizer = mp.tasks.vision.GestureRecognizer
@@ -22,13 +16,13 @@ GestureRecognizerOptions = mp.tasks.vision.GestureRecognizerOptions
 VisionRunningMode = mp.tasks.vision.RunningMode
 
 GESTURE_LABELS = {
-    "Thumb_Up": "👍 (Yes)",
-    "Thumb_Down": "👎 (No)",
-    "Victory": "✌️ (Peace)",
-    "Pointing_Up": "☝️ (Up)",
-    "Fist": "✊ (Sorry)",
-    "Open_Palm": "👋 (Hello)",
-    "ILoveYou": "🤟 (I Love You)",
+    "Thumb_Up": "👍 Yes",
+    "Thumb_Down": "👎 No",
+    "Victory": "✌️ Peace",
+    "Pointing_Up": "☝️ Up",
+    "Fist": "✊ Sorry",
+    "Open_Palm": "👋 Hello",
+    "ILoveYou": "🤟 I Love You",
 }
 
 # A single noisy frame shouldn't count as a real gesture, and one held gesture
@@ -54,9 +48,9 @@ class GestureVideoProcessor(VideoProcessorBase):
         self._recent_predictions: list = []
         self._last_triggered = {"gesture": None, "at": 0.0}
         self._lock = threading.Lock()
-        # Read by the main script thread to update the on-screen status;
-        # written here from the WebRTC worker thread.
+        # Read by the main script thread; written here from the WebRTC worker thread.
         self.last_stable_gesture = None
+        self.last_stable_at = 0.0
 
     def recv(self, frame: av.VideoFrame) -> av.VideoFrame:
         image = frame.to_ndarray(format="bgr24")
@@ -92,44 +86,10 @@ class GestureVideoProcessor(VideoProcessorBase):
                 if not already_shown_recently:
                     self._last_triggered = {"gesture": stable_gesture, "at": now}
                     self.last_stable_gesture = stable_gesture
+                    self.last_stable_at = now
 
         if raw_gesture:
             label = GESTURE_LABELS.get(raw_gesture, "Unknown gesture")
             cv2.putText(image, label, (30, 40), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 0, 0), 3)
 
         return av.VideoFrame.from_ndarray(image, format="bgr24")
-
-
-st.title("Gesture Shortcuts")
-st.write("Show one of the supported hand gestures to your camera to trigger its shortcut phrase.")
-st.caption(
-    "This recognizes a fixed set of generic hand gestures (thumbs up, peace sign, etc.) using "
-    "MediaPipe's built-in gesture recognizer — it is not sign-language recognition. Video is "
-    "streamed from your browser's camera over WebRTC, so this works on a hosted deployment too, "
-    "not just when running locally."
-)
-st.write(", ".join(f"{k.replace('_', ' ')} → {v}" for k, v in GESTURE_LABELS.items()))
-
-ctx = webrtc_streamer(
-    key="gesture-shortcuts",
-    mode=WebRtcMode.SENDRECV,
-    video_processor_factory=GestureVideoProcessor,
-    media_stream_constraints={"video": True, "audio": False},
-)
-
-status_placeholder = st.empty()
-if ctx.state.playing:
-    while True:
-        if ctx.video_processor:
-            gesture = ctx.video_processor.last_stable_gesture
-            if gesture:
-                status_placeholder.success(
-                    f"Last recognized: {GESTURE_LABELS.get(gesture, gesture)}"
-                )
-        else:
-            break
-        if not ctx.state.playing:
-            break
-        time.sleep(0.3)
-else:
-    status_placeholder.info("Click **Start** above and allow camera access to begin.")

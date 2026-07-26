@@ -1,7 +1,17 @@
 import streamlit as st
 import os
 
-st.title("Text-to-Sign Language Converter")
+from assets.theme import inject_theme
+
+st.set_page_config(page_title="Sign Vocabulary Explorer — Accessible AI", page_icon="🤟", layout="wide")
+inject_theme()
+
+st.title("Sign Vocabulary Explorer")
+st.caption(
+    "This looks up a fixed set of stored sign images for known words and phrases. "
+    "It is a vocabulary lookup, not a sign-language translator — ASL has its own grammar "
+    "that isn't captured by displaying English words one at a time."
+)
 
 # Folder containing sign language images
 SIGN_IMAGE_FOLDER = "sign_language_images"
@@ -25,9 +35,9 @@ def display_sign_images(text):
                 st.warning(f"No sign found for '{word}'.")
 
 # User Input
-user_text = st.text_input("Enter a phrase to convert into Sign Language:")
+user_text = st.text_input("Enter a word or phrase to look up:")
 
-if st.button("Convert to Sign Language"):
+if st.button("Show Sign(s)"):
     if user_text:
         display_sign_images(user_text.strip())  # Trim any extra spaces
     else:
