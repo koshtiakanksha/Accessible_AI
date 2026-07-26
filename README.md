@@ -64,6 +64,36 @@ WebRTC, so they work the same way whether you're running locally or visiting a h
 deployment (e.g. Streamlit Community Cloud) — you'll just need to grant the browser
 mic/camera permission prompt.
 
+## Evaluation
+
+`scripts/evaluate_gestures.py` and `scripts/evaluate_speech.py` measure the two
+ML-driven pieces of this app instead of just asserting they work.
+
+```bash
+pip install -r requirements-dev.txt
+python scripts/evaluate_gestures.py test_data/gestures   # see test_data/gestures/README.md
+python scripts/evaluate_speech.py
+```
+
+**Gesture recognizer** (`evaluate_gestures.py`): runs the exact model the app uses
+against a labeled folder of your own gesture photos and reports per-class
+precision/recall/F1, a confusion matrix, false-activation rate (how often a
+no-hand/unsupported-gesture photo gets misread as a real gesture), and
+inference latency. No photos are checked into this repo — add your own under
+`test_data/gestures/<ClassName>/` (see the README there). A synthetic smoke
+test (3 plain no-hand images) confirmed the pipeline runs end to end and
+correctly measured **17.1ms average inference latency** and a **0%
+false-activation rate on those 3 images** — real numbers, but from synthetic
+smoke-test images, not a real accuracy evaluation. Populate the class folders
+with real photos to get real per-class numbers.
+
+**Speech-to-text** (`evaluate_speech.py`): synthesizes known sentences with
+gTTS and round-trips them through the app's own transcription function,
+reporting Word Error Rate. This is a synthetic-audio proxy, not a real-speech
+benchmark — see the script's docstring for what it does and doesn't tell you.
+The WER metric itself was unit-tested against hand-crafted reference/hypothesis
+pairs to confirm it computes correctly.
+
 ## Known limitations (read before assuming a feature works)
 
 - Speech-to-text is record-then-transcribe, not live streaming captions — you speak,
@@ -88,6 +118,9 @@ assets/theme.py               Shared design tokens + CSS + hero/card components
 lib/speech_capture.py         WebRTC mic buffering + transcription
 lib/gesture_capture.py        WebRTC camera + MediaPipe gesture recognition
 lib/tts.py                    gTTS synthesis helper
+scripts/evaluate_gestures.py  Gesture recognizer eval (precision/recall/F1/confusion matrix)
+scripts/evaluate_speech.py    Speech pipeline round-trip WER check
+test_data/gestures/           Your own labeled gesture photos go here (not checked in)
 ```
 
 The standalone pages and Conversation mode both import from `lib/`, so there's one
@@ -104,8 +137,10 @@ This project is being rebuilt in phases toward a more complete, honestly-scoped
    works for visitors, not just local runs.
 3. ✅ **Conversation mode** — voice, captions, and gesture shortcuts merged into one
    screen.
-4. **Next**: formal evaluation of the gesture recognizer (precision/recall/F1 per
-   class, false-activation rate) and a spot-check of transcription accuracy.
+4. 🔄 **In progress**: evaluation harnesses for the gesture recognizer and speech
+   pipeline are built and working (see [Evaluation](#evaluation)) — actual accuracy
+   numbers still need real gesture photos and a real-microphone environment to
+   populate.
 5. Basic automated tests + CI.
 
 ## Contributing
