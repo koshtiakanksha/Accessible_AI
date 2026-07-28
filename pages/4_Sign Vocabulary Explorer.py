@@ -1,5 +1,7 @@
-import streamlit as st
+import json
 import os
+
+import streamlit as st
 
 from assets.theme import inject_theme
 
@@ -8,37 +10,82 @@ inject_theme()
 
 st.title("Sign Vocabulary Explorer")
 st.caption(
-    "This looks up a fixed set of stored sign images for known words and phrases. "
+    "This looks up a small set of stored sign images for known words and phrases. "
     "It is a vocabulary lookup, not a sign-language translator — ASL has its own grammar "
     "that isn't captured by displaying English words one at a time."
 )
 
-# Folder containing sign language images
 SIGN_IMAGE_FOLDER = "sign_language_images"
+MANIFEST_PATH = os.path.join(SIGN_IMAGE_FOLDER, "manifest.json")
 
-# Function to display sign images
-def display_sign_images(text):
-    available_images = {img.lower(): img for img in os.listdir(SIGN_IMAGE_FOLDER)}  # Normalize filenames
 
-    # Try to find an exact match for a full phrase
-    if f"{text.lower()}.png" in available_images:
-        phrase_image_path = os.path.join(SIGN_IMAGE_FOLDER, available_images[f"{text.lower()}.png"])
-        st.image(phrase_image_path, caption=text, use_container_width=False)
-    else:
-        # If the phrase is not found, check word-by-word
-        words = text.lower().split()
-        for word in words:
-            word_image_path = os.path.join(SIGN_IMAGE_FOLDER, available_images.get(f"{word}.png", ""))
-            if os.path.exists(word_image_path):
-                st.image(word_image_path, caption=word.capitalize(), use_container_width=False)
-            else:
-                st.warning(f"No sign found for '{word}'.")
+@st.cache_data
+def load_manifest():
+    if not os.path.exists(MANIFEST_PATH):
+        return {}
+    with open(MANIFEST_PATH) as f:
+        entries = json.load(f)
+    return {e["phrase"].lower(): e for e in entries if e.get("phrase") and e.get("image")}
 
-# User Input
-user_text = st.text_input("Enter a word or phrase to look up:")
 
-if st.button("Show Sign(s)"):
-    if user_text:
-        display_sign_images(user_text.strip())  # Trim any extra spaces
-    else:
+manifest = load_manifest()
+
+if not manifest:
+    st.error(
+        f"No vocabulary found — check that {MANIFEST_PATH} exists and lists at least one entry."
+    )
+    st.stop()
+
+
+def show_lookup(text: str) -> None:
+    key = text.lower().strip()
+    if key in manifest:
+        entry = manifest[key]
+        st.image(os.path.join(SIGN_IMAGE_FOLDER, entry["image"]), caption=entry["phrase"], width=320)
+        return
+
+    # No match for the whole phrase — fall back to whichever individual
+    # words we do have signs for, and say plainly which ones we don't.
+    words = key.split()
+    found_any = False
+    missing = []
+    cols = st.columns(min(len(words), 4) or 1)
+    col_i = 0
+    for word in words:
+        if word in manifest:
+            entry = manifest[word]
+            with cols[col_i % len(cols)]:
+                st.image(os.path.join(SIGN_IMAGE_FOLDER, entry["image"]), caption=entry["phrase"], width=200)
+            col_i += 1
+            found_any = True
+        else:
+            missing.append(word)
+
+    if missing:
+        st.warning(
+            f"No sign found for: {', '.join(missing)}. "
+            f"See the list below for everything currently covered."
+        )
+    if not found_any and not missing:
         st.warning("Please enter some text.")
+
+
+left, right = st.columns([2, 1])
+
+with left:
+    user_text = st.text_input("Enter a word or phrase to look up:")
+    if st.button("Show Sign(s)"):
+        if user_text.strip():
+            show_lookup(user_text)
+        else:
+            st.warning("Please enter some text.")
+
+with right:
+    st.markdown("**Everything currently covered**")
+    st.caption("Browse instead of guessing — this is the full vocabulary right now.")
+    for phrase in sorted(e["phrase"] for e in manifest.values()):
+        st.write(f"- {phrase}")
+    st.caption(
+        "Want to add more? See `sign_language_images/README.md` for how — and why sign "
+        "accuracy matters more than vocabulary size."
+    )
